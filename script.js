@@ -13,6 +13,8 @@ class Particle {
     this.vy;
     this.speedModified = Math.random() * 3 + 1;
     this.angle = 0;
+    this.newAngle = 0;
+    this.angleCorrector = Math.random() * 0.2 + 0.01;
     this.colors = ["#4C026B", "#730D9E", "#9622C7", "#B44AE0", "#CD72F2"];
     this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
     this.reset();
@@ -34,7 +36,16 @@ class Particle {
       let index = cellY * this.effect.columns + cellX;
 
       if (this.effect.flowField[index]) {
-        this.angle = this.effect.flowField[index].colorAngle;
+        this.newAngle = this.effect.flowField[index].colorAngle;
+
+        // Change angle gradually to reduce sharp turns
+        if (this.angle > this.newAngle) {
+          this.angle -= this.angleCorrector;
+        } else if (this.angle < this.newAngle) {
+          this.angle += this.angleCorrector;
+        } else {
+          this.angle = this.angleCorrector;
+        }
       }
 
       this.vx = Math.cos(this.angle);
