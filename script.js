@@ -3,10 +3,9 @@ const MAX_TAIL_LENGTH = 100;
 const CELL_SIZE = 10; // canvas width must be divisible by CELL_SIZE without remainder for effect to work correctly
 const ZOOM = 0.11;
 const CURVE = 16;
-const TEXT = "hazadus.ru";
+const TEXT = "hazadus";
 const TEXT_SIZE = "250"; // px
 const TEXT_FONT = "Impact";
-const TEXT_COLOR = "yellow";
 
 class Particle {
   constructor(effect) {
@@ -179,8 +178,28 @@ class Effect {
     this.context.font = `${TEXT_SIZE}px ${TEXT_FONT}`;
     this.context.textAlign = "center";
     this.context.textBaseline = "middle";
-    this.context.fillStyle = TEXT_COLOR;
-    this.context.fillText(TEXT, this.width / 2, this.height / 2);
+
+    const gradient1 = this.context.createLinearGradient(0, 0, this.width, this.height);
+    gradient1.addColorStop(0.2, "rgb(255,0,0");
+    gradient1.addColorStop(0.4, "rgb(0,255,0");
+    gradient1.addColorStop(0.6, "rgb(150,100,100");
+    gradient1.addColorStop(0.8, "rgb(0,255,255");
+
+    const gradient2 = this.context.createRadialGradient(
+      this.width / 2,
+      this.height / 2,
+      10,
+      this.width / 2,
+      this.height / 2,
+      this.width,
+    );
+    gradient2.addColorStop(0.2, "rgb(0,0,255");
+    gradient2.addColorStop(0.4, "rgb(200,255,0");
+    gradient2.addColorStop(0.6, "rgb(0,0,255");
+    gradient2.addColorStop(0.8, "rgb(0,0,0");
+
+    this.context.fillStyle = gradient2;
+    this.context.fillText(TEXT, this.width / 2, this.height / 2, this.width * 0.8);
     this.context.restore();
   }
 
