@@ -1,8 +1,12 @@
 const PARTICLES_QTY = 2000;
 const MAX_TAIL_LENGTH = 100;
-const CELL_SIZE = 8;
+const CELL_SIZE = 10; // canvas width must be divisible by CELL_SIZE without remainder for effect to work correctly
 const ZOOM = 0.11;
 const CURVE = 16;
+const TEXT = "hazadus.ru";
+const TEXT_SIZE = "250"; // px
+const TEXT_FONT = "Impact";
+const TEXT_COLOR = "yellow";
 
 class Particle {
   constructor(effect) {
@@ -30,7 +34,10 @@ class Particle {
       let cellX = Math.floor(this.x / CELL_SIZE);
       let cellY = Math.floor(this.y / CELL_SIZE);
       let index = cellY * this.effect.columns + cellX;
-      this.angle = this.effect.flowField[index];
+
+      if (this.effect.flowField[index]) {
+        this.angle = this.effect.flowField[index].colorAngle;
+      }
 
       this.vx = Math.cos(this.angle);
       this.vy = Math.sin(this.angle);
@@ -83,7 +90,8 @@ class Effect {
   configureCanvas() {
     const ctx = this.canvas.getContext("2d");
 
-    this.canvas.width = window.innerWidth;
+    // canvas width must be divisible by CELL_SIZE without remainder for effect to work correctly
+    this.canvas.width = window.innerWidth - (window.innerWidth % 10);
     this.canvas.height = window.innerHeight;
 
     ctx.fillStyle = "blue";
@@ -113,10 +121,34 @@ class Effect {
     this.columns = Math.floor(this.width / CELL_SIZE);
     this.flowField = [];
 
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.columns; x++) {
-        let angle = (Math.cos(x * ZOOM) + Math.sin(y * ZOOM)) * CURVE;
-        this.flowField.push(angle);
+    // Draw text once, then scan pixel data to check whick cells of the flow field
+    // are lying inside the text
+    this.drawText();
+    const pixels = this.context.getImageData(0, 0, this.width, this.height).data;
+    // `pixels` is flat array, filled with four rgba() values for each pixel (red, green, blue, opacity).
+
+    // Build the flow field based on the text pixels
+    for (let y = 0; y < this.height; y += CELL_SIZE) {
+      for (let x = 0; x < this.width; x += CELL_SIZE) {
+        // Calculate index for this point inside `pixels` array. `* 4` because there's 4 values
+        // for each pixel (r,g,b,opacity).
+        const index = (y * this.width + x) * 4;
+        const red = pixels[index];
+        const green = pixels[index + 1];
+        const blue = pixels[index + 2];
+        const alpha = pixels[index + 3];
+
+        // Convert color to grayscale
+        const grayscale = (red + green + blue) / 3;
+
+        // Convert color (0...255) to angle value (0...6.28) radians (360 degrees)
+        const colorAngle = ((grayscale / 255) * 6.28).toFixed(2);
+
+        this.flowField.push({
+          x: x,
+          y: y,
+          colorAngle: colorAngle,
+        });
       }
     }
   }
@@ -139,6 +171,17 @@ class Effect {
     this._fps = Math.round(1000 / (timestamp - this._prevTimestamp));
     this._prevTimestamp = timestamp;
     this.context.fillText(this._fps + " fps", 8, 16);
+  }
+
+  drawText() {
+    this.context.save();
+    // Make text size responsive and dependent on canvas width.
+    this.context.font = `${TEXT_SIZE}px ${TEXT_FONT}`;
+    this.context.textAlign = "center";
+    this.context.textBaseline = "middle";
+    this.context.fillStyle = TEXT_COLOR;
+    this.context.fillText(TEXT, this.width / 2, this.height / 2);
+    this.context.restore();
   }
 
   drawGrid() {
@@ -164,8 +207,13 @@ class Effect {
 
   renderFrame(timestamp) {
     this.clearCanvas();
-    if (this.debugMode) this.drawGrid();
-    if (this.debugMode) this.handleFPS(timestamp);
+
+    if (this.debugMode) {
+      this.drawGrid();
+      this.handleFPS(timestamp);
+      this.drawText();
+    }
+
     this.handleParticles();
   }
 }

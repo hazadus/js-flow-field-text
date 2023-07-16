@@ -4,9 +4,15 @@
   box-sizing: border-box;
 }
 
+body {
+  background: black;
+}
+
 #canvas1 {
   background: black;
   position: absolute;
-  top: 0;
-  left: 0;
+  /* Center the canvas: */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
