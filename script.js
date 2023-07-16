@@ -1,9 +1,9 @@
-const PARTICLES_QTY = 2000;
-const MAX_TAIL_LENGTH = 100;
+const PARTICLES_QTY = 1000;
+const MAX_TAIL_LENGTH = 170;
 const CELL_SIZE = 10; // canvas width must be divisible by CELL_SIZE without remainder for effect to work correctly
-const ZOOM = 0.11;
-const CURVE = 16;
-const TEXT = "hazadus";
+const ZOOM = 0.5;
+const CURVE = 0.6;
+const TEXT = "HAZADUS";
 const TEXT_FONT = "Impact";
 
 class Particle {
@@ -11,20 +11,39 @@ class Particle {
     this.effect = effect;
     this.vx;
     this.vy;
-    this.speedModified = Math.random() * 3 + 1;
+    this.speedModified = Math.random() * 1 + 0.4;
     this.angle = 0;
     this.newAngle = 0;
-    this.angleCorrector = Math.random() * 0.2 + 0.01;
-    this.colors = ["#4C026B", "#730D9E", "#9622C7", "#B44AE0", "#CD72F2"];
+    this.angleCorrector = Math.random() * 0.2 + 0.1;
+    this.colors = ["#4C026B", "#730D9E", "#9622C7", "#B44AE0", "#CD72F2", "blue", "orange"];
     this.color = this.colors[Math.floor(Math.random() * this.colors.length)];
     this.reset();
   }
 
   reset() {
-    this.x = Math.floor(Math.random() * effect.width);
-    this.y = Math.floor(Math.random() * effect.height);
-    this.timer = MAX_TAIL_LENGTH * 2;
-    this.history = [{ x: this.x, y: this.y }];
+    let attempts = 0;
+    let resetSuccess = false;
+
+    while (attempts < 40 && !resetSuccess) {
+      attempts++;
+      let testIndex = Math.floor(Math.random() * this.effect.flowField.length);
+
+      // `alpha > 0` means that this pixel isn't transparent and contains some color
+      if (this.effect.flowField[testIndex].alpha > 0) {
+        this.x = this.effect.flowField[testIndex].x;
+        this.y = this.effect.flowField[testIndex].y;
+        this.timer = MAX_TAIL_LENGTH * 2;
+        this.history = [{ x: this.x, y: this.y }];
+        resetSuccess = true;
+      }
+    }
+
+    if (!resetSuccess) {
+      this.x = Math.floor(Math.random() * effect.width);
+      this.y = Math.floor(Math.random() * effect.height);
+      this.timer = MAX_TAIL_LENGTH * 2;
+      this.history = [{ x: this.x, y: this.y }];
+    }
   }
 
   update() {
@@ -80,7 +99,7 @@ class Effect {
     this.rows;
     this.columns;
     this.flowField = [];
-    this.debugMode = true;
+    this.debugMode = false;
     this._fps = 0;
     this._prevTimestamp = 0;
     this.textSize;
@@ -109,7 +128,7 @@ class Effect {
     ctx.lineWidth = 1;
     ctx.font = "normal 12pt Courier";
 
-    this.textSize = (this.width / TEXT.length) * 2;
+    this.textSize = (this.width / TEXT.length) * 1.8;
   }
 
   get width() {
@@ -159,6 +178,7 @@ class Effect {
         this.flowField.push({
           x: x,
           y: y,
+          alpha: alpha,
           colorAngle: colorAngle,
         });
       }
@@ -188,7 +208,7 @@ class Effect {
   drawText() {
     this.context.save();
     // Make text size responsive and dependent on canvas width.
-    this.context.font = `${this.textSize}px ${TEXT_FONT}`;
+    this.context.font = `Italic ${this.textSize}px ${TEXT_FONT}`;
     this.context.textAlign = "center";
     this.context.textBaseline = "middle";
 
