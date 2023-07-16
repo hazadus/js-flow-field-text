@@ -4,7 +4,6 @@ const CELL_SIZE = 10; // canvas width must be divisible by CELL_SIZE without rem
 const ZOOM = 0.11;
 const CURVE = 16;
 const TEXT = "hazadus";
-const TEXT_SIZE = "250"; // px
 const TEXT_FONT = "Impact";
 
 class Particle {
@@ -73,6 +72,7 @@ class Effect {
     this.debugMode = true;
     this._fps = 0;
     this._prevTimestamp = 0;
+    this.textSize;
     this.configureCanvas();
     this.configureFlowField();
 
@@ -97,6 +97,8 @@ class Effect {
     ctx.strokeStyle = "white";
     ctx.lineWidth = 1;
     ctx.font = "normal 12pt Courier";
+
+    this.textSize = (this.width / TEXT.length) * 2;
   }
 
   get width() {
@@ -175,7 +177,7 @@ class Effect {
   drawText() {
     this.context.save();
     // Make text size responsive and dependent on canvas width.
-    this.context.font = `${TEXT_SIZE}px ${TEXT_FONT}`;
+    this.context.font = `${this.textSize}px ${TEXT_FONT}`;
     this.context.textAlign = "center";
     this.context.textBaseline = "middle";
 
@@ -199,7 +201,7 @@ class Effect {
     gradient2.addColorStop(0.8, "rgb(0,0,0");
 
     this.context.fillStyle = gradient2;
-    this.context.fillText(TEXT, this.width / 2, this.height / 2, this.width * 0.8);
+    this.context.fillText(TEXT, this.width / 2, this.height / 2);
     this.context.restore();
   }
 
